@@ -157,6 +157,48 @@
 
   footer.foot{margin-top:56px;padding:30px 0;border-top:1px solid var(--line);text-align:center;color:var(--muted);font-size:13px}
   .demo-tag{position:fixed;bottom:16px;right:16px;background:var(--ink);color:#fff;font-size:12px;font-weight:700;padding:9px 14px;border-radius:999px;box-shadow:var(--shadow);z-index:30;opacity:.92}
+
+  /* auth buttons in header */
+  .authbtns{display:flex;align-items:center;gap:10px}
+  .btn-sm{border:none;border-radius:10px;padding:9px 16px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;transition:.15s}
+  .btn-login{background:#fff;border:2px solid var(--line);color:var(--ink)}
+  .btn-login:hover{border-color:#cbd5e1}
+  .btn-signup{background:var(--brand);color:#fff}
+  .btn-signup:hover{background:var(--brand-dark)}
+  .worker-link{font-size:12px;color:var(--muted);text-decoration:none;font-weight:700;border-left:1px solid var(--line);padding-left:12px;margin-left:2px}
+  .worker-link:hover{color:var(--brand-dark)}
+  .worker-link b{color:var(--brand-dark)}
+  @media(max-width:720px){.worker-link{display:none}.btn-login{display:none}}
+
+  /* modal system */
+  .overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(3px);z-index:100;display:none;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto}
+  .overlay.show{display:flex;animation:fade .25s ease}
+  .modal{background:#fff;border-radius:22px;box-shadow:0 30px 70px rgba(15,23,42,.35);width:100%;max-width:460px;overflow:hidden;animation:pop .3s ease}
+  .modal.wide{max-width:680px}
+  .modal-head{padding:24px 26px 6px;position:relative}
+  .modal-head h3{margin:0;font-size:22px;letter-spacing:-.02em}
+  .modal-head p{margin:6px 0 0;color:var(--muted);font-size:14px}
+  .modal-x{position:absolute;top:18px;right:20px;background:#f1f5f9;border:none;width:34px;height:34px;border-radius:999px;font-size:18px;cursor:pointer;color:var(--muted);line-height:1}
+  .modal-x:hover{background:#e2e8f0}
+  .modal-body{padding:16px 26px 8px}
+  .modal-foot{padding:16px 26px 24px}
+  .modal-foot .btn{width:100%}
+  .switch{text-align:center;font-size:13px;color:var(--muted);margin-top:14px}
+  .switch a{color:var(--brand-dark);font-weight:800;text-decoration:none;cursor:pointer}
+  .divider{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:12px;margin:16px 0}
+  .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
+  .guest{width:100%;background:#fff;border:2px dashed var(--line);border-radius:12px;padding:13px;font-weight:800;color:var(--muted);cursor:pointer;font-family:inherit}
+  .guest:hover{border-color:var(--brand);color:var(--brand-dark)}
+  .fld.sm{margin-bottom:14px}
+  .fld.sm label.f{font-size:12px}
+  .fld.sm input,.fld.sm select{padding:11px 13px;font-size:14px}
+  .up{border:2px dashed var(--line);border-radius:12px;padding:16px;text-align:center;color:var(--muted);font-size:13px;font-weight:700;cursor:pointer}
+  .up:hover{border-color:var(--brand);color:var(--brand-dark)}
+  .yn{display:flex;gap:10px}
+  .yn .chip{flex:1;text-align:center}
+  .ref-block{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;background:#fbfdfe}
+  .ref-block .rt{font-weight:800;font-size:13px;margin-bottom:10px;color:var(--muted)}
+  .ok-banner{background:#dcfce7;color:#15803d;border-radius:12px;padding:14px;font-weight:700;font-size:14px;text-align:center;margin-bottom:8px}
 </style>
 </head>
 <body>
@@ -167,9 +209,12 @@
       <a href="#book">Book</a>
       <a href="#how">How it works</a>
       <a href="#roles">Dashboards</a>
-      <a href="#">Become a cleaner</a>
     </nav>
-    <span class="pill">● Live in your area</span>
+    <div class="authbtns">
+      <button class="btn-sm btn-login" id="openLogin">Log in</button>
+      <button class="btn-sm btn-signup" id="openSignup">Sign up</button>
+      <a href="#" class="worker-link" id="openWorker">Are you a cleaner?<br/><b>Register here →</b></a>
+    </div>
   </div>
 </header>
 
@@ -356,6 +401,117 @@
   </footer>
 </div>
 
+<!-- LOGIN MODAL -->
+<div class="overlay" id="loginModal">
+  <div class="modal">
+    <div class="modal-head">
+      <button class="modal-x" data-close>×</button>
+      <h3>Welcome back</h3>
+      <p>Log in to manage your bookings, addresses and rewards.</p>
+    </div>
+    <div class="modal-body">
+      <div class="fld sm"><label class="f">Email address</label><input type="email" placeholder="you@email.com" /></div>
+      <div class="fld sm"><label class="f">Password</label><input type="password" placeholder="••••••••" /></div>
+      <div style="text-align:right;margin-top:-6px"><a class="switch" style="margin:0" href="#" onclick="return false">Forgot password?</a></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-primary" onclick="fakeAuth('Logged in! Redirecting to your dashboard…')">Log in</button>
+      <div class="switch">New to SparkleHub? <a data-swap="signup">Create an account</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- SIGNUP MODAL -->
+<div class="overlay" id="signupModal">
+  <div class="modal">
+    <div class="modal-head">
+      <button class="modal-x" data-close>×</button>
+      <h3>Create your account</h3>
+      <p>Book faster, save addresses and earn loyalty points.</p>
+    </div>
+    <div class="modal-body">
+      <div class="row">
+        <div class="fld sm"><label class="f">Name</label><input placeholder="First name" /></div>
+        <div class="fld sm"><label class="f">Surname</label><input placeholder="Last name" /></div>
+      </div>
+      <div class="fld sm"><label class="f">Email address</label><input type="email" placeholder="you@email.com" /></div>
+      <div class="fld sm"><label class="f">Confirm email</label><input type="email" placeholder="Re-enter email" /></div>
+      <div class="row">
+        <div class="fld sm"><label class="f">Phone number</label><input placeholder="+00 000 000 0000" /></div>
+        <div class="fld sm"><label class="f">Primary address</label><input placeholder="Home address" /></div>
+      </div>
+      <div class="row">
+        <div class="fld sm"><label class="f">Password</label><input type="password" placeholder="••••••••" /></div>
+        <div class="fld sm"><label class="f">Confirm password</label><input type="password" placeholder="••••••••" /></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-primary" onclick="fakeAuth('Account created! Welcome to SparkleHub 🎉')">Create account</button>
+      <div class="divider">or</div>
+      <button class="guest" data-close onclick="document.querySelector('.svc')?.scrollIntoView({behavior:'smooth'})">Continue as guest →</button>
+      <div class="switch">Already have an account? <a data-swap="login">Log in</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- WORKER / CLEANER REGISTRATION MODAL -->
+<div class="overlay" id="workerModal">
+  <div class="modal wide">
+    <div class="modal-head">
+      <button class="modal-x" data-close>×</button>
+      <h3>Join SparkleHub as a cleaner</h3>
+      <p>Set your own schedule, work in your area, and get paid fast. Fill in the form below to apply — our team reviews every application.</p>
+    </div>
+    <div class="modal-body" id="workerForm">
+      <div class="row">
+        <div class="fld sm"><label class="f">Full names</label><input placeholder="Given names" /></div>
+        <div class="fld sm"><label class="f">Surname</label><input placeholder="Last name" /></div>
+      </div>
+      <div class="row">
+        <div class="fld sm"><label class="f">ID / Passport / Work permit no.</label><input placeholder="Document number" /></div>
+        <div class="fld sm"><label class="f">Date of birth</label><input type="date" /></div>
+      </div>
+      <div class="row">
+        <div class="fld sm"><label class="f">Phone number</label><input placeholder="+00 000 000 0000" /></div>
+        <div class="fld sm"><label class="f">Email address</label><input type="email" placeholder="you@email.com" /></div>
+      </div>
+      <div class="fld sm"><label class="f">Home address</label><input placeholder="Where you live" /></div>
+      <div class="row">
+        <div class="fld sm"><label class="f">Province you'll work in</label>
+          <select><option>Select province</option><option>Gauteng</option><option>Western Cape</option><option>KwaZulu-Natal</option><option>Eastern Cape</option><option>Free State</option><option>Other</option></select>
+        </div>
+        <div class="fld sm"><label class="f">Cities / areas</label><input placeholder="e.g. Cape Town, Bellville" /></div>
+      </div>
+      <div class="fld sm"><label class="f">Do you have a criminal record?</label>
+        <div class="yn">
+          <div class="chip sel" onclick="pickYN(this)">No</div>
+          <div class="chip" onclick="pickYN(this)">Yes</div>
+        </div>
+      </div>
+
+      <div class="ref-block">
+        <div class="rt">Reference 1</div>
+        <div class="row"><div class="fld sm"><label class="f">Name</label><input placeholder="First name" /></div><div class="fld sm"><label class="f">Surname</label><input placeholder="Last name" /></div></div>
+        <div class="row"><div class="fld sm"><label class="f">Contact details</label><input placeholder="Phone / email" /></div><div class="fld sm"><label class="f">Address</label><input placeholder="Address" /></div></div>
+      </div>
+      <div class="ref-block">
+        <div class="rt">Reference 2</div>
+        <div class="row"><div class="fld sm"><label class="f">Name</label><input placeholder="First name" /></div><div class="fld sm"><label class="f">Surname</label><input placeholder="Last name" /></div></div>
+        <div class="row"><div class="fld sm"><label class="f">Contact details</label><input placeholder="Phone / email" /></div><div class="fld sm"><label class="f">Address</label><input placeholder="Address" /></div></div>
+      </div>
+
+      <label class="f" style="margin-bottom:8px;display:block">Upload documents</label>
+      <div class="row">
+        <div class="fld sm"><div class="up" onclick="alert('File picker (demo)')">📄 ID / Passport / Work permit<br/><small>Click to upload</small></div></div>
+        <div class="fld sm"><div class="up" onclick="alert('File picker (demo)')">📷 Head &amp; shoulders photo<br/><small>Click to upload</small></div></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-primary" onclick="submitWorker()">Submit application</button>
+    </div>
+  </div>
+</div>
+
 <div class="demo-tag">✦ Interactive demo</div>
 
 <script>
@@ -517,6 +673,35 @@ nextBtn.onclick=()=>{
 backBtn.onclick=()=>{ if(S.step>0) show(S.step-1); };
 
 updateLive();
+
+/* ---------- Auth & worker modals ---------- */
+function openModal(id){ closeAll(); document.getElementById(id).classList.add('show'); document.body.style.overflow='hidden'; }
+function closeAll(){ document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('show')); document.body.style.overflow=''; }
+document.getElementById('openLogin').onclick=()=>openModal('loginModal');
+document.getElementById('openSignup').onclick=()=>openModal('signupModal');
+document.getElementById('openWorker').onclick=(e)=>{e.preventDefault();openModal('workerModal');};
+document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',closeAll));
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) closeAll(); }));
+document.querySelectorAll('[data-swap]').forEach(a=>a.addEventListener('click',()=>openModal(a.dataset.swap+'Modal')));
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeAll(); });
+
+function fakeAuth(msg){ closeAll(); toast(msg); }
+function pickYN(el){ el.parentNode.querySelectorAll('.chip').forEach(c=>c.classList.remove('sel')); el.classList.add('sel'); }
+function submitWorker(){
+  const form=document.getElementById('workerForm');
+  const foot=form.nextElementSibling;
+  form.innerHTML='<div class="ok-banner">✓ Application received!</div><p class="hint" style="text-align:center;margin:0">Thanks for applying to SparkleHub. Our team will verify your documents and references, and get back to you within 2–3 business days. You\'ll receive an SMS once your profile is approved.</p>';
+  foot.innerHTML='<button class="btn btn-primary" data-close style="width:100%">Done</button>';
+  foot.querySelector('[data-close]').addEventListener('click',closeAll);
+}
+function toast(msg){
+  const t=document.createElement('div');
+  t.textContent=msg;
+  t.style.cssText='position:fixed;left:50%;top:24px;transform:translateX(-50%);background:#0f172a;color:#fff;padding:14px 22px;border-radius:12px;font-weight:700;font-size:14px;z-index:200;box-shadow:0 12px 30px rgba(0,0,0,.3)';
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.transition='.4s';t.style.opacity='0';t.style.top='10px';},2200);
+  setTimeout(()=>t.remove(),2700);
+}
 </script>
 </body>
 </html>
