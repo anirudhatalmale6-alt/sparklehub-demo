@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SparkleHub — Book a Cleaner in Minutes</title>
+<style>
+  :root{
+    --bg:#0b1020; --card:#ffffff; --ink:#0f172a; --muted:#64748b;
+    --brand:#0ea5a4; --brand-dark:#0b7d7c; --brand-soft:#e6fbfa;
+    --accent:#7c3aed; --line:#e5e9f0; --ok:#16a34a; --star:#f59e0b;
+    --shadow:0 10px 30px rgba(15,23,42,.10); --radius:18px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink); background:linear-gradient(180deg,#f6f9fb 0%,#eef3f7 100%);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 18px}
+
+  /* Header */
+  header.top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:64px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;letter-spacing:-.02em}
+  .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--brand),var(--accent));display:grid;place-items:center;color:#fff;font-size:18px;box-shadow:var(--shadow)}
+  .navlinks{display:flex;gap:22px;color:var(--muted);font-weight:600;font-size:14px}
+  .navlinks a{color:inherit;text-decoration:none}
+  .navlinks a:hover{color:var(--ink)}
+  .pill{display:inline-flex;align-items:center;gap:8px;background:var(--brand-soft);color:var(--brand-dark);font-weight:700;font-size:12px;padding:6px 12px;border-radius:999px}
+  @media(max-width:720px){.navlinks{display:none}}
+
+  /* Hero */
+  .hero{padding:54px 0 26px;text-align:center}
+  .hero h1{font-size:clamp(30px,5vw,46px);line-height:1.05;letter-spacing:-.03em;margin:14px 0 12px}
+  .hero p.sub{color:var(--muted);font-size:18px;max-width:640px;margin:0 auto 22px}
+  .trust{display:flex;gap:26px;justify-content:center;flex-wrap:wrap;margin-top:18px;color:var(--muted);font-size:13px;font-weight:600}
+  .trust b{color:var(--ink)}
+
+  /* Card / booking */
+  .booker{background:var(--card);border-radius:24px;box-shadow:var(--shadow);border:1px solid var(--line);overflow:hidden;margin-top:8px}
+  .steps{display:flex;gap:6px;padding:16px 22px;border-bottom:1px solid var(--line);background:#fbfdfe}
+  .step{flex:1;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;color:var(--muted)}
+  .step .dot{width:26px;height:26px;border-radius:999px;background:#eef2f6;display:grid;place-items:center;font-size:12px;color:var(--muted);border:2px solid transparent;transition:.2s}
+  .step.active{color:var(--ink)}
+  .step.active .dot{background:var(--brand);color:#fff}
+  .step.done .dot{background:var(--ok);color:#fff}
+  .step .lbl{white-space:nowrap}
+  @media(max-width:720px){.step .lbl{display:none}.steps{gap:4px}}
+
+  .panel{padding:26px 26px 8px;display:none;animation:fade .35s ease}
+  .panel.show{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h2.q{font-size:22px;margin:2px 0 4px;letter-spacing:-.02em}
+  p.hint{color:var(--muted);margin:0 0 20px;font-size:14px}
+
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:720px){.grid{grid-template-columns:repeat(2,1fr)}}
+  .svc{border:2px solid var(--line);border-radius:16px;padding:18px 16px;cursor:pointer;transition:.15s;background:#fff;text-align:left;position:relative}
+  .svc:hover{border-color:#cdd7e2;transform:translateY(-2px);box-shadow:var(--shadow)}
+  .svc.sel{border-color:var(--brand);background:var(--brand-soft)}
+  .svc .ico{font-size:26px}
+  .svc h3{margin:10px 0 3px;font-size:15px}
+  .svc small{color:var(--muted);font-size:12px}
+  .svc .from{position:absolute;top:14px;right:14px;font-size:11px;font-weight:800;color:var(--brand-dark)}
+
+  .row{display:flex;gap:14px;flex-wrap:wrap}
+  .fld{flex:1;min-width:180px;margin-bottom:16px}
+  label.f{display:block;font-weight:700;font-size:13px;margin-bottom:7px}
+  input,select{width:100%;padding:13px 14px;border:2px solid var(--line);border-radius:12px;font-size:15px;font-family:inherit;background:#fff;transition:.15s}
+  input:focus,select:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 4px var(--brand-soft)}
+
+  .stepper{display:flex;align-items:center;gap:0;border:2px solid var(--line);border-radius:12px;overflow:hidden;width:fit-content}
+  .stepper button{width:44px;height:46px;border:none;background:#f4f7fa;font-size:20px;cursor:pointer;color:var(--ink)}
+  .stepper button:hover{background:#e9eff4}
+  .stepper .val{width:56px;text-align:center;font-weight:800;font-size:16px}
+
+  .chips{display:flex;gap:10px;flex-wrap:wrap}
+  .chip{padding:11px 16px;border:2px solid var(--line);border-radius:999px;cursor:pointer;font-weight:700;font-size:14px;background:#fff;transition:.15s}
+  .chip:hover{border-color:#cdd7e2}
+  .chip.sel{border-color:var(--brand);background:var(--brand-soft);color:var(--brand-dark)}
+
+  .times{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  @media(max-width:720px){.times{grid-template-columns:repeat(3,1fr)}}
+  .extras{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:6px}
+  @media(max-width:720px){.extras{grid-template-columns:1fr}}
+  .extra{display:flex;align-items:center;gap:12px;border:2px solid var(--line);border-radius:14px;padding:13px 15px;cursor:pointer;transition:.15s}
+  .extra:hover{border-color:#cdd7e2}
+  .extra.sel{border-color:var(--brand);background:var(--brand-soft)}
+  .extra .cbx{width:22px;height:22px;border-radius:7px;border:2px solid #cbd5e1;display:grid;place-items:center;color:#fff;font-size:13px;flex:none}
+  .extra.sel .cbx{background:var(--brand);border-color:var(--brand)}
+  .extra .ex-t{font-weight:700;font-size:14px}
+  .extra .ex-p{margin-left:auto;font-weight:800;color:var(--brand-dark);font-size:14px}
+
+  /* Summary */
+  .summary{display:grid;grid-template-columns:1.4fr 1fr;gap:22px}
+  @media(max-width:720px){.summary{grid-template-columns:1fr}}
+  .line{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px dashed var(--line);font-size:14px}
+  .line .k{color:var(--muted)}
+  .line .v{font-weight:700}
+  .total{display:flex;justify-content:space-between;padding:16px 0 4px;font-size:20px;font-weight:900}
+  .total .v{color:var(--brand-dark)}
+  .paybox{background:#fbfdfe;border:1px solid var(--line);border-radius:16px;padding:18px}
+  .paybox h4{margin:0 0 14px;font-size:15px}
+  .pm{display:flex;align-items:center;gap:10px;border:2px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;cursor:pointer;font-weight:700;font-size:14px}
+  .pm.sel{border-color:var(--brand);background:var(--brand-soft)}
+  .pm .r{width:18px;height:18px;border-radius:999px;border:2px solid #cbd5e1;flex:none}
+  .pm.sel .r{border-color:var(--brand);box-shadow:inset 0 0 0 4px var(--brand)}
+
+  .promo{display:flex;gap:8px;margin:8px 0 4px}
+  .promo input{flex:1}
+  .promo button{padding:0 16px;border-radius:12px;border:2px solid var(--brand);background:#fff;color:var(--brand-dark);font-weight:800;cursor:pointer}
+  .saved{color:var(--ok);font-size:13px;font-weight:700;margin-top:4px}
+
+  /* footer of card */
+  .actions{display:flex;justify-content:space-between;align-items:center;padding:18px 26px;border-top:1px solid var(--line);background:#fbfdfe;margin-top:14px}
+  .price-now{font-size:14px;color:var(--muted)}
+  .price-now b{font-size:20px;color:var(--ink)}
+  .btn{border:none;border-radius:12px;padding:14px 26px;font-weight:800;font-size:15px;cursor:pointer;transition:.15s}
+  .btn-primary{background:var(--brand);color:#fff;box-shadow:0 6px 18px rgba(14,165,164,.35)}
+  .btn-primary:hover{background:var(--brand-dark);transform:translateY(-1px)}
+  .btn-ghost{background:#fff;border:2px solid var(--line);color:var(--muted)}
+  .btn-ghost:hover{border-color:#cbd5e1;color:var(--ink)}
+  .btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+
+  /* confirmation */
+  .confirm{text-align:center;padding:20px 10px 10px}
+  .check{width:78px;height:78px;border-radius:999px;background:var(--ok);color:#fff;display:grid;place-items:center;font-size:40px;margin:0 auto 16px;box-shadow:0 10px 30px rgba(22,163,74,.35);animation:pop .4s ease}
+  @keyframes pop{0%{transform:scale(.5);opacity:0}70%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+  .pro{display:flex;align-items:center;gap:14px;justify-content:center;margin:20px auto;max-width:360px;background:#fbfdfe;border:1px solid var(--line);border-radius:16px;padding:16px}
+  .pro .av{width:52px;height:52px;border-radius:999px;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;display:grid;place-items:center;font-weight:800;font-size:20px}
+  .pro .meta{text-align:left}
+  .pro .meta b{display:block}
+  .pro .meta small{color:var(--muted)}
+  .stars{color:var(--star);font-size:13px}
+
+  /* sections below */
+  .section{padding:56px 0 10px}
+  .section h2.sec{text-align:center;font-size:30px;letter-spacing:-.02em;margin:0 0 6px}
+  .section p.seclead{text-align:center;color:var(--muted);margin:0 auto 34px;max-width:560px}
+  .feats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  @media(max-width:720px){.feats{grid-template-columns:repeat(2,1fr)}}
+  .feat{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:var(--shadow)}
+  .feat .fi{width:44px;height:44px;border-radius:12px;background:var(--brand-soft);display:grid;place-items:center;font-size:22px;margin-bottom:12px}
+  .feat h3{margin:0 0 6px;font-size:16px}
+  .feat p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
+
+  .roles{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:8px}
+  @media(max-width:720px){.roles{grid-template-columns:1fr}}
+  .role{border:1px solid var(--line);border-radius:16px;padding:22px;background:#fff;box-shadow:var(--shadow)}
+  .role .badge{display:inline-block;font-size:11px;font-weight:800;padding:5px 10px;border-radius:999px;margin-bottom:12px}
+  .role.cust .badge{background:#e0f2fe;color:#0369a1}
+  .role.clean .badge{background:#dcfce7;color:#15803d}
+  .role.admin .badge{background:#f3e8ff;color:#7c2d92}
+  .role ul{margin:8px 0 0;padding-left:18px;color:var(--muted);font-size:13px;line-height:1.9}
+
+  footer.foot{margin-top:56px;padding:30px 0;border-top:1px solid var(--line);text-align:center;color:var(--muted);font-size:13px}
+  .demo-tag{position:fixed;bottom:16px;right:16px;background:var(--ink);color:#fff;font-size:12px;font-weight:700;padding:9px 14px;border-radius:999px;box-shadow:var(--shadow);z-index:30;opacity:.92}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap nav">
+    <div class="brand"><div class="logo">✦</div> SparkleHub</div>
+    <nav class="navlinks">
+      <a href="#book">Book</a>
+      <a href="#how">How it works</a>
+      <a href="#roles">Dashboards</a>
+      <a href="#">Become a cleaner</a>
+    </nav>
+    <span class="pill">● Live in your area</span>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="hero" id="book">
+    <span class="pill">Trusted cleaning, on demand</span>
+    <h1>A spotless home is<br/>just a few taps away</h1>
+    <p class="sub">Book vetted, background-checked cleaning professionals in minutes. Transparent pricing, secure payment, and live tracking — indoor and outdoor.</p>
+    <div class="trust">
+      <span>⭐ <b>4.9</b>/5 from 12,400+ bookings</span>
+      <span>🛡️ <b>Vetted</b> &amp; insured pros</span>
+      <span>⚡ Next-day <b>availability</b></span>
+    </div>
+  </section>
+
+  <!-- BOOKING WIDGET -->
+  <div class="booker">
+    <div class="steps">
+      <div class="step active" data-s="0"><div class="dot">1</div><span class="lbl">Service</span></div>
+      <div class="step" data-s="1"><div class="dot">2</div><span class="lbl">Details</span></div>
+      <div class="step" data-s="2"><div class="dot">3</div><span class="lbl">Schedule</span></div>
+      <div class="step" data-s="3"><div class="dot">4</div><span class="lbl">Address</span></div>
+      <div class="step" data-s="4"><div class="dot">5</div><span class="lbl">Pay</span></div>
+    </div>
+
+    <!-- STEP 1: service -->
+    <div class="panel show" data-p="0">
+      <h2 class="q">What do you need cleaned?</h2>
+      <p class="hint">Choose a service to get started. Prices adjust to your home in the next step.</p>
+      <div class="grid" id="svcGrid"></div>
+    </div>
+
+    <!-- STEP 2: details -->
+    <div class="panel" data-p="1">
+      <h2 class="q">Tell us about your space</h2>
+      <p class="hint">This helps us match the right pro and estimate the time needed.</p>
+      <div class="row">
+        <div class="fld">
+          <label class="f">Bedrooms</label>
+          <div class="stepper"><button data-step="bedrooms" data-d="-1">−</button><div class="val" id="v-bedrooms">2</div><button data-step="bedrooms" data-d="1">+</button></div>
+        </div>
+        <div class="fld">
+          <label class="f">Bathrooms</label>
+          <div class="stepper"><button data-step="bathrooms" data-d="-1">−</button><div class="val" id="v-bathrooms">1</div><button data-step="bathrooms" data-d="1">+</button></div>
+        </div>
+      </div>
+      <div class="fld">
+        <label class="f">How dirty is it?</label>
+        <div class="chips" id="conditionChips">
+          <div class="chip sel" data-cond="1">Regular tidy-up</div>
+          <div class="chip" data-cond="1.25">Needs some work</div>
+          <div class="chip" data-cond="1.5">Deep clean</div>
+        </div>
+      </div>
+      <div class="fld">
+        <label class="f">Add extras (optional)</label>
+        <div class="extras" id="extrasBox"></div>
+      </div>
+    </div>
+
+    <!-- STEP 3: schedule -->
+    <div class="panel" data-p="2">
+      <h2 class="q">When should we come?</h2>
+      <p class="hint">Pick a day and a time slot that works for you.</p>
+      <div class="fld">
+        <label class="f">Choose a day</label>
+        <div class="chips" id="dayChips"></div>
+      </div>
+      <div class="fld">
+        <label class="f">Choose a time</label>
+        <div class="times" id="timeGrid"></div>
+      </div>
+      <div class="fld">
+        <label class="f">How often?</label>
+        <div class="chips" id="freqChips">
+          <div class="chip sel" data-freq="1" data-off="0">One-time</div>
+          <div class="chip" data-freq="1" data-off="0.10">Weekly · save 10%</div>
+          <div class="chip" data-freq="1" data-off="0.05">Fortnightly · save 5%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4: address -->
+    <div class="panel" data-p="3">
+      <h2 class="q">Where are we cleaning?</h2>
+      <p class="hint">Your address stays private and is only shared with your assigned pro.</p>
+      <div class="fld">
+        <label class="f">Street address</label>
+        <input id="addr" placeholder="e.g. 24 Maple Avenue" />
+      </div>
+      <div class="row">
+        <div class="fld"><label class="f">Suburb / City</label><input id="city" placeholder="City" /></div>
+        <div class="fld"><label class="f">Postal code</label><input id="zip" placeholder="0000" /></div>
+      </div>
+      <div class="row">
+        <div class="fld"><label class="f">Your name</label><input id="cname" placeholder="Full name" /></div>
+        <div class="fld"><label class="f">Mobile number</label><input id="cphone" placeholder="+00 000 000 0000" /></div>
+      </div>
+      <div class="fld"><label class="f">Access notes (optional)</label><input id="notes" placeholder="Gate code, parking, pets…" /></div>
+    </div>
+
+    <!-- STEP 5: pay -->
+    <div class="panel" data-p="4">
+      <h2 class="q">Review &amp; pay</h2>
+      <p class="hint">Confirm your booking. You won't be charged until a pro accepts.</p>
+      <div class="summary">
+        <div>
+          <div id="summaryLines"></div>
+          <div class="total"><span>Total</span><span class="v" id="grandTotal">$0</span></div>
+          <div class="promo">
+            <input id="promo" placeholder="Promo code (try SPARKLE10)" />
+            <button id="applyPromo">Apply</button>
+          </div>
+          <div class="saved" id="promoMsg" style="display:none"></div>
+        </div>
+        <div class="paybox">
+          <h4>Payment method</h4>
+          <div class="pm sel" data-pm="card"><span class="r"></span> 💳 Credit / Debit card</div>
+          <div class="pm" data-pm="wallet"><span class="r"></span> 📱 Mobile wallet</div>
+          <div class="pm" data-pm="cash"><span class="r"></span> 💵 Cash on completion</div>
+          <p style="color:var(--muted);font-size:12px;margin:12px 0 0">🔒 Payments are encrypted &amp; held securely until your clean is complete.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONFIRM -->
+    <div class="panel" data-p="5">
+      <div class="confirm">
+        <div class="check">✓</div>
+        <h2 class="q" style="justify-content:center">Booking confirmed!</h2>
+        <p class="hint" style="text-align:center">We're matching you with a top-rated pro. You'll get a notification the moment they accept.</p>
+        <div class="pro">
+          <div class="av">A</div>
+          <div class="meta">
+            <b>Amara N.</b>
+            <span class="stars">★★★★★</span> <small>· 4.96 · 320 cleans</small>
+            <br/><small id="confMeta">Standard house cleaning</small>
+          </div>
+        </div>
+        <p style="color:var(--muted);font-size:13px">Booking ref <b id="bookRef">#SPK-0000</b> · A receipt has been sent to your phone.</p>
+      </div>
+    </div>
+
+    <div class="actions" id="actionBar">
+      <div class="price-now">Estimated total<br/><b id="liveTotal">$0</b></div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-ghost" id="backBtn" style="display:none">Back</button>
+        <button class="btn btn-primary" id="nextBtn" disabled>Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <section class="section" id="how">
+    <h2 class="sec">Why customers love SparkleHub</h2>
+    <p class="seclead">The convenience of Uber, applied to a sparkling clean home.</p>
+    <div class="feats">
+      <div class="feat"><div class="fi">⚡</div><h3>Book in minutes</h3><p>Pick a service, time and address — a matched pro confirms fast.</p></div>
+      <div class="feat"><div class="fi">📍</div><h3>Live tracking</h3><p>See your pro on the way and get real-time status updates.</p></div>
+      <div class="feat"><div class="fi">🛡️</div><h3>Vetted &amp; insured</h3><p>Every professional is background-checked and rated by real customers.</p></div>
+      <div class="feat"><div class="fi">🎁</div><h3>Rewards &amp; referrals</h3><p>Earn loyalty points on every booking and get credit for referrals.</p></div>
+    </div>
+  </section>
+
+  <!-- ROLES -->
+  <section class="section" id="roles">
+    <h2 class="sec">Three dashboards, one platform</h2>
+    <p class="seclead">Customers, cleaners and admins each get a purpose-built experience.</p>
+    <div class="roles">
+      <div class="role cust"><span class="badge">CUSTOMER</span>
+        <ul><li>Book &amp; track cleanings</li><li>Saved addresses &amp; cards</li><li>Loyalty points &amp; referrals</li><li>Favourite professionals</li><li>Booking history &amp; receipts</li></ul>
+      </div>
+      <div class="role clean"><span class="badge">CLEANER</span>
+        <ul><li>Accept nearby jobs</li><li>Route &amp; schedule view</li><li>Earnings &amp; payouts</li><li>Ratings &amp; reviews</li><li>Availability control</li></ul>
+      </div>
+      <div class="role admin"><span class="badge">ADMIN</span>
+        <ul><li>Manage bookings live</li><li>Onboard &amp; vet cleaners</li><li>Pricing &amp; promo control</li><li>Payments &amp; payouts</li><li>Reports &amp; analytics</li></ul>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    SparkleHub — interactive concept demo built for your project · booking flow is fully clickable end-to-end
+  </footer>
+</div>
+
+<div class="demo-tag">✦ Interactive demo</div>
+
+<script>
+const SERVICES = [
+  {id:'standard', ico:'🏠', name:'Standard house cleaning', desc:'Dusting, floors, kitchen & baths', base:45},
+  {id:'deep', ico:'✨', name:'Deep cleaning', desc:'Top-to-bottom detailed clean', base:80},
+  {id:'move', ico:'📦', name:'Move-in / Move-out', desc:'Empty-home turnover clean', base:110},
+  {id:'office', ico:'🏢', name:'Office cleaning', desc:'Workspaces & common areas', base:70},
+  {id:'outdoor', ico:'🌿', name:'Outdoor cleaning', desc:'Patios, windows, exteriors', base:60},
+  {id:'garden', ico:'🌳', name:'Gardening', desc:'Lawn, hedges & tidy-up', base:55},
+  {id:'laundry', ico:'🧺', name:'Laundry', desc:'Wash, dry & fold', base:30},
+  {id:'ironing', ico:'👔', name:'Ironing', desc:'Pressed & folded', base:25},
+  {id:'windows', ico:'🪟', name:'Window cleaning', desc:'Streak-free inside & out', base:40},
+];
+const EXTRAS = [
+  {id:'fridge', t:'Inside fridge', p:12},
+  {id:'oven', t:'Inside oven', p:15},
+  {id:'windows', t:'Interior windows', p:18},
+  {id:'laundry', t:'Laundry & fold', p:14},
+  {id:'cabinets', t:'Inside cabinets', p:10},
+  {id:'ironing', t:'Ironing (1 hr)', p:12},
+];
+const DAYS = ['Today','Tomorrow','Wed','Thu','Fri','Sat'];
+const TIMES = ['08:00','10:00','12:00','14:00','16:00','18:00'];
+
+const S = {
+  step:0, service:null, bedrooms:2, bathrooms:1, cond:1,
+  extras:new Set(), day:null, time:null, freqOff:0,
+  pm:'card', promo:0, promoCode:''
+};
+
+// build service grid
+const svcGrid = document.getElementById('svcGrid');
+SERVICES.forEach(s=>{
+  const el=document.createElement('div');
+  el.className='svc'; el.dataset.id=s.id;
+  el.innerHTML=`<div class="ico">${s.ico}</div><span class="from">from $${s.base}</span><h3>${s.name}</h3><small>${s.desc}</small>`;
+  el.onclick=()=>{ S.service=s; document.querySelectorAll('.svc').forEach(x=>x.classList.remove('sel')); el.classList.add('sel'); updateLive(); gate(); };
+  svcGrid.appendChild(el);
+});
+
+// extras
+const extrasBox=document.getElementById('extrasBox');
+EXTRAS.forEach(e=>{
+  const el=document.createElement('div');
+  el.className='extra'; el.dataset.id=e.id;
+  el.innerHTML=`<span class="cbx">✓</span><span class="ex-t">${e.t}</span><span class="ex-p">+$${e.p}</span>`;
+  el.onclick=()=>{ if(S.extras.has(e.id)){S.extras.delete(e.id);el.classList.remove('sel');}else{S.extras.add(e.id);el.classList.add('sel');} updateLive(); };
+  extrasBox.appendChild(el);
+});
+
+// days & times
+const dayChips=document.getElementById('dayChips');
+DAYS.forEach((d,i)=>{ const el=document.createElement('div');el.className='chip';el.textContent=d;
+  el.onclick=()=>{S.day=d;document.querySelectorAll('#dayChips .chip').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');gate();};
+  dayChips.appendChild(el); });
+const timeGrid=document.getElementById('timeGrid');
+TIMES.forEach(t=>{ const el=document.createElement('div');el.className='chip';el.textContent=t;el.style.textAlign='center';
+  el.onclick=()=>{S.time=t;document.querySelectorAll('#timeGrid .chip').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');gate();};
+  timeGrid.appendChild(el); });
+
+// steppers
+document.querySelectorAll('.stepper button').forEach(b=>{
+  b.onclick=()=>{ const k=b.dataset.step; const d=+b.dataset.d; S[k]=Math.max(k==='bedrooms'?0:1, S[k]+d); document.getElementById('v-'+k).textContent=S[k]; updateLive(); };
+});
+// condition
+document.querySelectorAll('#conditionChips .chip').forEach(c=>{
+  c.onclick=()=>{ S.cond=+c.dataset.cond; document.querySelectorAll('#conditionChips .chip').forEach(x=>x.classList.remove('sel')); c.classList.add('sel'); updateLive(); };
+});
+// frequency
+document.querySelectorAll('#freqChips .chip').forEach(c=>{
+  c.onclick=()=>{ S.freqOff=+c.dataset.off; document.querySelectorAll('#freqChips .chip').forEach(x=>x.classList.remove('sel')); c.classList.add('sel'); updateLive(); };
+});
+// payment
+document.querySelectorAll('.pm').forEach(p=>{
+  p.onclick=()=>{ S.pm=p.dataset.pm; document.querySelectorAll('.pm').forEach(x=>x.classList.remove('sel')); p.classList.add('sel'); };
+});
+// promo
+document.getElementById('applyPromo').onclick=()=>{
+  const v=document.getElementById('promo').value.trim().toUpperCase();
+  const msg=document.getElementById('promoMsg');
+  if(v==='SPARKLE10'){ S.promo=0.10; S.promoCode=v; msg.style.display='block'; msg.textContent='✓ SPARKLE10 applied — 10% off!'; }
+  else { S.promo=0; S.promoCode=''; msg.style.display='block'; msg.style.color='#dc2626'; msg.textContent='That code isn\'t valid.'; }
+  renderSummary(); updateLive();
+};
+
+function calc(){
+  if(!S.service) return {items:[],total:0};
+  const items=[];
+  let base = S.service.base;
+  // size scaling
+  const sizeAdd = (S.bedrooms*8) + (S.bathrooms*6);
+  const sub = Math.round((base + sizeAdd) * S.cond);
+  items.push({k:`${S.service.name}`, v:sub});
+  let total = sub;
+  S.extras.forEach(id=>{ const e=EXTRAS.find(x=>x.id===id); items.push({k:`+ ${e.t}`, v:e.p}); total+=e.p; });
+  const serviceFee = Math.round(total*0.08);
+  items.push({k:'Service fee', v:serviceFee}); total+=serviceFee;
+  if(S.freqOff){ const d=Math.round(total*S.freqOff); items.push({k:`Recurring discount`, v:-d}); total-=d; }
+  if(S.promo){ const d=Math.round(total*S.promo); items.push({k:`Promo ${S.promoCode}`, v:-d}); total-=d; }
+  return {items, total};
+}
+function updateLive(){
+  const {total}=calc();
+  document.getElementById('liveTotal').textContent = total? '$'+total : '$0';
+}
+function renderSummary(){
+  const {items,total}=calc();
+  const box=document.getElementById('summaryLines');
+  const when = (S.day&&S.time)? `${S.day} · ${S.time}` : 'Not set';
+  let html = `<div class="line"><span class="k">When</span><span class="v">${when}</span></div>`;
+  html += `<div class="line"><span class="k">Home</span><span class="v">${S.bedrooms} bed · ${S.bathrooms} bath</span></div>`;
+  items.forEach(it=> html += `<div class="line"><span class="k">${it.k}</span><span class="v">${it.v<0?'-$'+Math.abs(it.v):'$'+it.v}</span></div>`);
+  box.innerHTML=html;
+  document.getElementById('grandTotal').textContent='$'+total;
+}
+
+// navigation
+const panels=[...document.querySelectorAll('.panel')];
+const stepsUI=[...document.querySelectorAll('.step')];
+const nextBtn=document.getElementById('nextBtn');
+const backBtn=document.getElementById('backBtn');
+
+function gate(){
+  let ok=true;
+  if(S.step===0) ok=!!S.service;
+  if(S.step===2) ok=!!(S.day&&S.time);
+  if(S.step===3) ok = document.getElementById('addr').value.trim() && document.getElementById('cname').value.trim() && document.getElementById('cphone').value.trim();
+  nextBtn.disabled=!ok;
+}
+['addr','cname','cphone','city','zip'].forEach(id=>document.getElementById(id).addEventListener('input',gate));
+
+function show(step){
+  S.step=step;
+  panels.forEach(p=>p.classList.toggle('show', +p.dataset.p===step));
+  stepsUI.forEach(s=>{ const n=+s.dataset.s; s.classList.toggle('active',n===step); s.classList.toggle('done',n<step); });
+  backBtn.style.display = (step>0 && step<5)?'inline-block':'none';
+  const bar=document.getElementById('actionBar');
+  if(step===4){ nextBtn.textContent='Confirm & Pay'; }
+  else if(step===5){ bar.style.display='none'; }
+  else { nextBtn.textContent='Continue'; }
+  if(step===4){ renderSummary(); }
+  window.scrollTo({top:document.querySelector('.booker').offsetTop-70,behavior:'smooth'});
+  gate();
+}
+
+nextBtn.onclick=()=>{
+  if(S.step<4){ show(S.step+1); }
+  else if(S.step===4){
+    // "process payment"
+    nextBtn.disabled=true; nextBtn.textContent='Processing…';
+    setTimeout(()=>{
+      document.getElementById('confMeta').textContent = S.service.name + ' · ' + S.day + ' at ' + S.time;
+      document.getElementById('bookRef').textContent = '#SPK-' + Math.floor(1000+ (S.bedrooms*317+S.bathrooms*53+ TIMES.indexOf(S.time)*29)%9000);
+      show(5);
+    }, 1100);
+  }
+};
+backBtn.onclick=()=>{ if(S.step>0) show(S.step-1); };
+
+updateLive();
+</script>
+</body>
+</html>
