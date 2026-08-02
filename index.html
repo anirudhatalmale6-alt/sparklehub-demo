@@ -62,6 +62,9 @@
   .svc{border:2px solid var(--line);border-radius:16px;padding:18px 16px;cursor:pointer;transition:.15s;background:#fff;text-align:left;position:relative}
   .svc:hover{border-color:#cdd7e2;transform:translateY(-2px);box-shadow:var(--shadow)}
   .svc.sel{border-color:var(--brand);background:var(--brand-soft)}
+  .svc .tick{position:absolute;top:12px;left:12px;width:22px;height:22px;border-radius:999px;background:var(--brand);color:#fff;display:none;place-items:center;font-size:12px;font-weight:900}
+  .svc.sel .tick{display:grid}
+  .svc.sel .ico{margin-top:6px}
   .svc .ico{font-size:26px}
   .svc h3{margin:10px 0 3px;font-size:15px}
   .svc small{color:var(--muted);font-size:12px}
@@ -273,8 +276,9 @@
     <!-- STEP 1: service -->
     <div class="panel show" data-p="0">
       <h2 class="q">What do you need cleaned?</h2>
-      <p class="hint">Choose a service to get started. Prices adjust to your home in the next step.</p>
+      <p class="hint">Pick one or more services — tap a card to add or remove it. Prices adjust to your home in the next step.</p>
       <div class="grid" id="svcGrid"></div>
+      <div id="svcCount" style="margin-top:16px;font-weight:800;color:var(--brand-dark);font-size:13px"></div>
     </div>
 
     <!-- STEP 2: details -->
@@ -582,8 +586,9 @@ const EXTRAS = [
 const DAYS = ['Today','Tomorrow','Wed','Thu','Fri','Sat'];
 const TIMES = ['08:00','10:00','12:00','14:00','16:00','18:00'];
 
+const SIZED = new Set(['standard','deep','move','office']); // services that scale with home size
 const S = {
-  step:0, service:null, bedrooms:2, bathrooms:1, cond:1,
+  step:0, services:[], bedrooms:2, bathrooms:1, cond:1,
   extras:new Set(), day:null, dateObj:null, time:null, freqOff:0,
   pm:'card', promo:0, promoCode:'', lat:null, lng:null
 };
@@ -593,10 +598,20 @@ const svcGrid = document.getElementById('svcGrid');
 SERVICES.forEach(s=>{
   const el=document.createElement('div');
   el.className='svc'; el.dataset.id=s.id;
-  el.innerHTML=`<div class="ico">${s.ico}</div><span class="from">from $${s.base}</span><h3>${s.name}</h3><small>${s.desc}</small>`;
-  el.onclick=()=>{ S.service=s; document.querySelectorAll('.svc').forEach(x=>x.classList.remove('sel')); el.classList.add('sel'); updateLive(); gate(); };
+  el.innerHTML=`<span class="tick">✓</span><div class="ico">${s.ico}</div><span class="from">from $${s.base}</span><h3>${s.name}</h3><small>${s.desc}</small>`;
+  el.onclick=()=>{
+    const i=S.services.findIndex(x=>x.id===s.id);
+    if(i>=0){ S.services.splice(i,1); el.classList.remove('sel'); }
+    else { S.services.push(s); el.classList.add('sel'); }
+    updateSvcCount(); updateLive(); gate();
+  };
   svcGrid.appendChild(el);
 });
+function updateSvcCount(){
+  const el=document.getElementById('svcCount');
+  const n=S.services.length;
+  el.textContent = n? `✓ ${n} service${n>1?'s':''} selected — tap another to add more, or Continue.` : '';
+}
 
 // extras
 const extrasBox=document.getElementById('extrasBox');
@@ -701,14 +716,15 @@ document.getElementById('applyPromo').onclick=()=>{
 };
 
 function calc(){
-  if(!S.service) return {items:[],total:0};
+  if(!S.services.length) return {items:[],total:0};
   const items=[];
-  let base = S.service.base;
-  // size scaling
+  let total = 0;
   const sizeAdd = (S.bedrooms*8) + (S.bathrooms*6);
-  const sub = Math.round((base + sizeAdd) * S.cond);
-  items.push({k:`${S.service.name}`, v:sub});
-  let total = sub;
+  S.services.forEach(s=>{
+    // home-size services scale with rooms + condition; others are flat
+    const line = SIZED.has(s.id) ? Math.round((s.base + sizeAdd) * S.cond) : s.base;
+    items.push({k:s.name, v:line}); total += line;
+  });
   S.extras.forEach(id=>{ const e=EXTRAS.find(x=>x.id===id); items.push({k:`+ ${e.t}`, v:e.p}); total+=e.p; });
   const serviceFee = Math.round(total*0.08);
   items.push({k:'Service fee', v:serviceFee}); total+=serviceFee;
@@ -725,7 +741,9 @@ function renderSummary(){
   const box=document.getElementById('summaryLines');
   const when = (S.day&&S.time)? `${S.day} · ${S.time}` : 'Not set';
   let html = `<div class="line"><span class="k">When</span><span class="v">${when}</span></div>`;
-  html += `<div class="line"><span class="k">Home</span><span class="v">${S.bedrooms} bed · ${S.bathrooms} bath</span></div>`;
+  html += `<div class="line"><span class="k">Services</span><span class="v">${S.services.length} selected</span></div>`;
+  if(S.services.some(s=>SIZED.has(s.id)))
+    html += `<div class="line"><span class="k">Home</span><span class="v">${S.bedrooms} bed · ${S.bathrooms} bath</span></div>`;
   items.forEach(it=> html += `<div class="line"><span class="k">${it.k}</span><span class="v">${it.v<0?'-$'+Math.abs(it.v):'$'+it.v}</span></div>`);
   box.innerHTML=html;
   document.getElementById('grandTotal').textContent='$'+total;
@@ -739,7 +757,7 @@ const backBtn=document.getElementById('backBtn');
 
 function gate(){
   let ok=true;
-  if(S.step===0) ok=!!S.service;
+  if(S.step===0) ok=S.services.length>0;
   if(S.step===2) ok=!!(S.day&&S.time);
   if(S.step===3) ok = document.getElementById('addr').value.trim() && document.getElementById('cname').value.trim() && document.getElementById('cphone').value.trim();
   nextBtn.disabled=!ok;
@@ -767,7 +785,7 @@ nextBtn.onclick=()=>{
     // "process payment"
     nextBtn.disabled=true; nextBtn.textContent='Processing…';
     setTimeout(()=>{
-      document.getElementById('confMeta').textContent = S.service.name + ' · ' + S.day + ' at ' + S.time;
+      document.getElementById('confMeta').textContent = S.services.map(s=>s.name).join(', ') + ' · ' + S.day + ' at ' + S.time;
       document.getElementById('bookRef').textContent = '#SPK-' + Math.floor(1000+ (S.bedrooms*317+S.bathrooms*53+ TIMES.indexOf(S.time)*29)%9000);
       show(5);
     }, 1100);
