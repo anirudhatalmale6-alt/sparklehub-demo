@@ -4,6 +4,8 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>SparkleHub — Book a Cleaner in Minutes</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
   :root{
     --bg:#0b1020; --card:#ffffff; --ink:#0f172a; --muted:#64748b;
@@ -168,7 +170,12 @@
   .worker-link{font-size:12px;color:var(--muted);text-decoration:none;font-weight:700;border-left:1px solid var(--line);padding-left:12px;margin-left:2px}
   .worker-link:hover{color:var(--brand-dark)}
   .worker-link b{color:var(--brand-dark)}
-  @media(max-width:720px){.worker-link{display:none}.btn-login{display:none}}
+  @media(max-width:720px){
+    .nav{height:auto;padding:10px 0;flex-wrap:wrap;gap:8px}
+    .authbtns{width:100%;justify-content:center;flex-wrap:wrap;gap:8px}
+    .worker-link{border-left:none;padding-left:0;margin-left:0;text-align:center;flex-basis:100%}
+    .worker-link br{display:none}
+  }
 
   /* modal system */
   .overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(3px);z-index:100;display:none;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto}
@@ -199,6 +206,29 @@
   .ref-block{border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;background:#fbfdfe}
   .ref-block .rt{font-weight:800;font-size:13px;margin-bottom:10px;color:var(--muted)}
   .ok-banner{background:#dcfce7;color:#15803d;border-radius:12px;padding:14px;font-weight:700;font-size:14px;text-align:center;margin-bottom:8px}
+
+  /* calendar */
+  .cal{border:2px solid var(--line);border-radius:16px;padding:16px;max-width:360px}
+  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .cal-head b{font-size:15px}
+  .cal-nav{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:16px;color:var(--ink)}
+  .cal-nav:hover{background:#f4f7fa}
+  .cal-nav:disabled{opacity:.3;cursor:not-allowed}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .cal-dow{text-align:center;font-size:11px;font-weight:800;color:var(--muted);padding:4px 0}
+  .cal-day{aspect-ratio:1;display:grid;place-items:center;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;border:2px solid transparent}
+  .cal-day:hover:not(.disabled):not(.empty){background:var(--brand-soft)}
+  .cal-day.disabled{color:#cbd5e1;cursor:not-allowed}
+  .cal-day.empty{cursor:default}
+  .cal-day.today{border-color:var(--brand)}
+  .cal-day.sel{background:var(--brand);color:#fff}
+
+  /* map */
+  #map{height:240px;border-radius:14px;border:2px solid var(--line);margin-top:8px;z-index:1}
+  .geo-btn{display:inline-flex;align-items:center;gap:8px;background:var(--brand-soft);color:var(--brand-dark);border:none;border-radius:10px;padding:11px 16px;font-weight:800;font-size:14px;cursor:pointer;font-family:inherit;margin-bottom:6px}
+  .geo-btn:hover{background:#d4f5f4}
+  .pin-note{font-size:12px;color:var(--muted);margin:8px 0 0}
+  .leaflet-container{font:inherit}
 </style>
 </head>
 <body>
@@ -281,7 +311,15 @@
       <p class="hint">Pick a day and a time slot that works for you.</p>
       <div class="fld">
         <label class="f">Choose a day</label>
-        <div class="chips" id="dayChips"></div>
+        <div class="cal" id="calendar">
+          <div class="cal-head">
+            <button class="cal-nav" id="calPrev">‹</button>
+            <b id="calTitle">Month</b>
+            <button class="cal-nav" id="calNext">›</button>
+          </div>
+          <div class="cal-grid" id="calDow"></div>
+          <div class="cal-grid" id="calDays"></div>
+        </div>
       </div>
       <div class="fld">
         <label class="f">Choose a time</label>
@@ -301,6 +339,12 @@
     <div class="panel" data-p="3">
       <h2 class="q">Where are we cleaning?</h2>
       <p class="hint">Your address stays private and is only shared with your assigned pro.</p>
+      <div class="fld">
+        <label class="f">Pin your exact location</label>
+        <button type="button" class="geo-btn" id="geoBtn">📍 Use my current location</button>
+        <div id="map"></div>
+        <p class="pin-note" id="pinNote">Drag the pin or click the map to set the exact spot. This helps your cleaner find you.</p>
+      </div>
       <div class="fld">
         <label class="f">Street address</label>
         <input id="addr" placeholder="e.g. 24 Maple Avenue" />
@@ -391,7 +435,8 @@
         <ul><li>Accept nearby jobs</li><li>Route &amp; schedule view</li><li>Earnings &amp; payouts</li><li>Ratings &amp; reviews</li><li>Availability control</li></ul>
       </div>
       <div class="role admin"><span class="badge">ADMIN</span>
-        <ul><li>Manage bookings live</li><li>Onboard &amp; vet cleaners</li><li>Pricing &amp; promo control</li><li>Payments &amp; payouts</li><li>Reports &amp; analytics</li></ul>
+        <ul><li>Manage bookings live</li><li><b>Location-based worker matching</b></li><li>Onboard &amp; vet cleaners</li><li>Pricing &amp; promo control</li><li>Payments &amp; payouts</li></ul>
+        <a href="admin.html" style="display:inline-block;margin-top:14px;background:var(--accent);color:#fff;text-decoration:none;font-weight:800;font-size:13px;padding:10px 16px;border-radius:10px">Open admin demo →</a>
       </div>
     </div>
   </section>
@@ -539,8 +584,8 @@ const TIMES = ['08:00','10:00','12:00','14:00','16:00','18:00'];
 
 const S = {
   step:0, service:null, bedrooms:2, bathrooms:1, cond:1,
-  extras:new Set(), day:null, time:null, freqOff:0,
-  pm:'card', promo:0, promoCode:''
+  extras:new Set(), day:null, dateObj:null, time:null, freqOff:0,
+  pm:'card', promo:0, promoCode:'', lat:null, lng:null
 };
 
 // build service grid
@@ -563,11 +608,68 @@ EXTRAS.forEach(e=>{
   extrasBox.appendChild(el);
 });
 
-// days & times
-const dayChips=document.getElementById('dayChips');
-DAYS.forEach((d,i)=>{ const el=document.createElement('div');el.className='chip';el.textContent=d;
-  el.onclick=()=>{S.day=d;document.querySelectorAll('#dayChips .chip').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');gate();};
-  dayChips.appendChild(el); });
+// ----- calendar (no past dates) -----
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DOW=['Su','Mo','Tu','We','Th','Fr','Sa'];
+const today=new Date(); today.setHours(0,0,0,0);
+let calView=new Date(today.getFullYear(), today.getMonth(), 1);
+const calDowEl=document.getElementById('calDow');
+DOW.forEach(d=>{const e=document.createElement('div');e.className='cal-dow';e.textContent=d;calDowEl.appendChild(e);});
+function renderCal(){
+  const y=calView.getFullYear(), m=calView.getMonth();
+  document.getElementById('calTitle').textContent=MONTHS[m]+' '+y;
+  const first=new Date(y,m,1).getDay();
+  const dim=new Date(y,m+1,0).getDate();
+  const box=document.getElementById('calDays'); box.innerHTML='';
+  for(let i=0;i<first;i++){const e=document.createElement('div');e.className='cal-day empty';box.appendChild(e);}
+  for(let d=1;d<=dim;d++){
+    const e=document.createElement('div'); e.className='cal-day'; e.textContent=d;
+    const dt=new Date(y,m,d);
+    if(dt.getTime()===today.getTime()) e.classList.add('today');
+    if(dt<today){ e.classList.add('disabled'); }
+    else { e.onclick=()=>selectDate(dt,e); }
+    if(S.dateObj && dt.getTime()===S.dateObj.getTime()) e.classList.add('sel');
+    box.appendChild(e);
+  }
+  document.getElementById('calPrev').disabled = (y===today.getFullYear() && m===today.getMonth());
+}
+function selectDate(dt,el){
+  S.dateObj=dt;
+  S.day=dt.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+  document.querySelectorAll('#calDays .cal-day').forEach(x=>x.classList.remove('sel'));
+  el.classList.add('sel');
+  gate();
+}
+document.getElementById('calPrev').onclick=()=>{ calView=new Date(calView.getFullYear(),calView.getMonth()-1,1); renderCal(); };
+document.getElementById('calNext').onclick=()=>{ calView=new Date(calView.getFullYear(),calView.getMonth()+1,1); renderCal(); };
+renderCal();
+
+// ----- location map (Leaflet + OpenStreetMap) -----
+let map, marker;
+function initMap(){
+  if(map){ setTimeout(()=>map.invalidateSize(),120); return; }
+  const start=[-33.9249,18.4241]; // Cape Town default; swaps to user's real location on geolocate
+  map=L.map('map',{scrollWheelZoom:false}).setView(start,12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
+  marker=L.marker(start,{draggable:true}).addTo(map);
+  marker.on('dragend',()=>{const p=marker.getLatLng();setPin(p.lat,p.lng);});
+  map.on('click',e=>{marker.setLatLng(e.latlng);setPin(e.latlng.lat,e.latlng.lng);});
+  setTimeout(()=>map.invalidateSize(),160);
+}
+function setPin(lat,lng){
+  S.lat=lat; S.lng=lng;
+  document.getElementById('pinNote').textContent='📍 Pinned at '+lat.toFixed(5)+', '+lng.toFixed(5)+' — your cleaner will find you easily.';
+}
+document.getElementById('geoBtn').onclick=()=>{
+  if(!navigator.geolocation){ document.getElementById('pinNote').textContent='Geolocation not available — drag the pin instead.'; return; }
+  document.getElementById('pinNote').textContent='Locating you…';
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const {latitude,longitude}=pos.coords;
+    map.setView([latitude,longitude],16); marker.setLatLng([latitude,longitude]); setPin(latitude,longitude);
+  }, ()=>{ document.getElementById('pinNote').textContent='Couldn’t get your location — drag the pin manually instead.'; });
+};
+
+// times
 const timeGrid=document.getElementById('timeGrid');
 TIMES.forEach(t=>{ const el=document.createElement('div');el.className='chip';el.textContent=t;el.style.textAlign='center';
   el.onclick=()=>{S.time=t;document.querySelectorAll('#timeGrid .chip').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');gate();};
@@ -653,6 +755,7 @@ function show(step){
   if(step===4){ nextBtn.textContent='Confirm & Pay'; }
   else if(step===5){ bar.style.display='none'; }
   else { nextBtn.textContent='Continue'; }
+  if(step===3){ initMap(); }
   if(step===4){ renderSummary(); }
   window.scrollTo({top:document.querySelector('.booker').offsetTop-70,behavior:'smooth'});
   gate();

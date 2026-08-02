@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SparkleHub Admin — Bookings & Worker Matching</title>
+<style>
+  :root{
+    --ink:#0f172a; --muted:#64748b; --brand:#0ea5a4; --brand-dark:#0b7d7c; --brand-soft:#e6fbfa;
+    --accent:#7c3aed; --line:#e5e9f0; --ok:#16a34a; --star:#f59e0b; --warn:#f59e0b;
+    --shadow:0 10px 30px rgba(15,23,42,.10);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:#f1f5f9;-webkit-font-smoothing:antialiased}
+  a{color:inherit}
+  header.top{background:#0f172a;color:#fff;position:sticky;top:0;z-index:10}
+  .nav{max-width:1180px;margin:0 auto;padding:0 20px;height:60px;display:flex;align-items:center;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px}
+  .logo{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,var(--brand),var(--accent));display:grid;place-items:center;font-size:16px}
+  .badge-admin{font-size:11px;font-weight:800;background:rgba(255,255,255,.15);padding:5px 10px;border-radius:999px;margin-left:6px}
+  .nav a.back{color:#cbd5e1;text-decoration:none;font-size:13px;font-weight:700}
+  .nav a.back:hover{color:#fff}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:22px 20px 60px}
+  .pagehead h1{font-size:24px;margin:0 0 4px;letter-spacing:-.02em}
+  .pagehead p{color:var(--muted);margin:0 0 18px;font-size:14px}
+
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+  @media(max-width:720px){.stats{grid-template-columns:repeat(2,1fr)}}
+  .stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow)}
+  .stat .n{font-size:24px;font-weight:900;letter-spacing:-.02em}
+  .stat .l{color:var(--muted);font-size:12px;font-weight:700;margin-top:2px}
+  .stat .n.teal{color:var(--brand-dark)} .stat .n.amber{color:#b45309}
+
+  .cols{display:grid;grid-template-columns:1fr 1.25fr;gap:18px}
+  @media(max-width:900px){.cols{grid-template-columns:1fr}}
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+  .card-h{padding:15px 18px;border-bottom:1px solid var(--line);font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:space-between}
+  .card-h small{color:var(--muted);font-weight:600;font-size:12px}
+
+  .booking{padding:14px 18px;border-bottom:1px solid var(--line);cursor:pointer;transition:.12s;display:flex;gap:12px;align-items:flex-start}
+  .booking:last-child{border-bottom:none}
+  .booking:hover{background:#f8fafc}
+  .booking.active{background:var(--brand-soft)}
+  .booking .av{width:40px;height:40px;border-radius:10px;flex:none;display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px}
+  .booking .info{flex:1;min-width:0}
+  .booking .info b{font-size:14px}
+  .booking .info .sub{color:var(--muted);font-size:12px;margin-top:2px}
+  .loc{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--brand-dark);background:var(--brand-soft);padding:3px 8px;border-radius:999px;margin-top:6px}
+  .stpill{font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;white-space:nowrap;align-self:center}
+  .st-need{background:#fef3c7;color:#b45309}
+  .st-assigned{background:#dcfce7;color:#15803d}
+
+  .detail{padding:18px}
+  .detail .empty{color:var(--muted);text-align:center;padding:40px 10px;font-size:14px}
+  .dh{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .dh .av{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;color:#fff;font-weight:800}
+  .dh b{font-size:17px} .dh .sub{color:var(--muted);font-size:13px}
+  .meta-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+  .meta-chip{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:12px}
+  .meta-chip b{display:block;font-size:13px;margin-top:2px}
+
+  .match-head{display:flex;align-items:center;gap:8px;font-weight:800;font-size:14px;margin:6px 0 12px}
+  .match-head .pin{color:var(--brand-dark)}
+  .match-note{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:12px;padding:11px 14px;font-size:13px;margin-bottom:14px;line-height:1.5}
+
+  .worker{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px;transition:.12s}
+  .worker.match{border-color:#a7f3d0;background:#f0fdf9}
+  .worker .wav{width:44px;height:44px;border-radius:999px;flex:none;display:grid;place-items:center;color:#fff;font-weight:800}
+  .worker .wi{flex:1;min-width:0}
+  .worker .wi b{font-size:14px}
+  .worker .wi .wsub{color:var(--muted);font-size:12px;margin-top:2px}
+  .stars{color:var(--star);font-size:12px}
+  .dist{font-size:12px;font-weight:800;color:var(--brand-dark)}
+  .assign{border:none;background:var(--brand);color:#fff;border-radius:10px;padding:9px 16px;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit;flex:none}
+  .assign:hover{background:var(--brand-dark)}
+  .assign.done{background:var(--ok);cursor:default}
+  .faded{opacity:.5}
+  .toast{position:fixed;left:50%;top:20px;transform:translateX(-50%);background:#0f172a;color:#fff;padding:13px 20px;border-radius:12px;font-weight:700;font-size:14px;z-index:50;box-shadow:0 12px 30px rgba(0,0,0,.3)}
+  .demo-tag{position:fixed;bottom:16px;right:16px;background:#0f172a;color:#fff;font-size:12px;font-weight:700;padding:9px 14px;border-radius:999px;box-shadow:var(--shadow);opacity:.92}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="nav">
+    <div class="brand"><div class="logo">✦</div> SparkleHub <span class="badge-admin">ADMIN</span></div>
+    <a class="back" href="index.html">← Back to customer site</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="pagehead">
+    <h1>Bookings &amp; worker matching</h1>
+    <p>Select a booking on the left — the system automatically suggests available cleaners in the customer's area.</p>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="n">18</div><div class="l">Bookings today</div></div>
+    <div class="stat"><div class="n amber" id="statNeed">4</div><div class="l">Awaiting a worker</div></div>
+    <div class="stat"><div class="n teal">27</div><div class="l">Active cleaners</div></div>
+    <div class="stat"><div class="n">4.9★</div><div class="l">Avg. rating</div></div>
+  </div>
+
+  <div class="cols">
+    <div class="card">
+      <div class="card-h">Pending bookings <small>Tap one to match</small></div>
+      <div id="bookingList"></div>
+    </div>
+    <div class="card">
+      <div class="card-h">Match &amp; assign <small id="detailCity"></small></div>
+      <div class="detail" id="detail">
+        <div class="empty">👈 Select a booking to see suggested cleaners in that location.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="demo-tag">✦ Admin demo</div>
+
+<script>
+const COLORS=['#0ea5a4','#7c3aed','#ef4444','#f59e0b','#3b82f6','#ec4899','#10b981','#8b5cf6'];
+function color(s){let h=0;for(const c of s)h=c.charCodeAt(0)+((h<<5)-h);return COLORS[Math.abs(h)%COLORS.length];}
+function initials(n){return n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();}
+
+// Cleaners with their working areas (city) + approx distance to the job
+const WORKERS = [
+  {name:'Amara Ndlovu', city:'New York', rating:4.96, jobs:320, dist:2.1, type:'Indoor'},
+  {name:'Marcus Chen', city:'New York', rating:4.88, jobs:210, dist:3.8, type:'Indoor'},
+  {name:'Priya Sharma', city:'New York', rating:4.79, jobs:145, dist:5.2, type:'Outdoor'},
+  {name:'David Okafor', city:'New York', rating:4.91, jobs:265, dist:6.0, type:'Indoor'},
+  {name:'Lerato Mbeki', city:'Los Angeles', rating:4.85, jobs:180, dist:1.4, type:'Indoor'},
+  {name:'Sofia Rossi', city:'Los Angeles', rating:4.72, jobs:98, dist:4.6, type:'Outdoor'},
+  {name:'James Carter', city:'Chicago', rating:4.94, jobs:240, dist:2.9, type:'Indoor'},
+  {name:'Fatima Al-Sayed', city:'Chicago', rating:4.81, jobs:156, dist:5.5, type:'Indoor'},
+  {name:'Thabo Dlamini', city:'Houston', rating:4.9, jobs:201, dist:3.1, type:'Outdoor'},
+];
+
+const BOOKINGS = [
+  {id:'SPK-4821', customer:'Customer A', service:'Standard house cleaning', city:'New York', when:'Tomorrow · 10:00', beds:'2 bed · 1 bath', status:'need'},
+  {id:'SPK-4822', customer:'Grace Miller', service:'Deep cleaning', city:'Los Angeles', when:'Tomorrow · 14:00', beds:'3 bed · 2 bath', status:'need'},
+  {id:'SPK-4823', customer:'Daniel Reed', service:'Office cleaning', city:'Chicago', when:'Thu · 09:00', beds:'Office · 400m²', status:'need'},
+  {id:'SPK-4824', customer:'Aisha Khan', service:'Outdoor cleaning', city:'Houston', when:'Fri · 11:00', beds:'Garden + patio', status:'need'},
+];
+
+const listEl=document.getElementById('bookingList');
+function renderList(){
+  listEl.innerHTML='';
+  BOOKINGS.forEach(b=>{
+    const el=document.createElement('div');
+    el.className='booking'+(b.id===selected?.id?' active':'');
+    el.innerHTML=`
+      <div class="av" style="background:${color(b.customer)}">${initials(b.customer)}</div>
+      <div class="info">
+        <b>${b.customer}</b>
+        <div class="sub">${b.service} · ${b.when}</div>
+        <span class="loc">📍 ${b.city}</span>
+      </div>
+      <span class="stpill ${b.status==='need'?'st-need':'st-assigned'}">${b.status==='need'?'Needs worker':'Assigned'}</span>`;
+    el.onclick=()=>{ selected=b; renderList(); renderDetail(); };
+    listEl.appendChild(el);
+  });
+  document.getElementById('statNeed').textContent = BOOKINGS.filter(b=>b.status==='need').length;
+}
+
+let selected=null;
+function renderDetail(){
+  const d=document.getElementById('detail');
+  document.getElementById('detailCity').textContent = selected? 'Location: '+selected.city : '';
+  if(!selected){ d.innerHTML='<div class="empty">👈 Select a booking to see suggested cleaners in that location.</div>'; return; }
+  const b=selected;
+  // MATCHING: workers in same city first, sorted by distance then rating
+  const matches=[...WORKERS].filter(w=>w.city===b.city).sort((a,c)=>a.dist-c.dist || c.rating-a.rating);
+  const others=[...WORKERS].filter(w=>w.city!==b.city).sort((a,c)=>c.rating-a.rating).slice(0,3);
+
+  let html=`
+    <div class="dh">
+      <div class="av" style="background:${color(b.customer)}">${initials(b.customer)}</div>
+      <div><b>${b.customer}</b><div class="sub">${b.id} · ${b.service}</div></div>
+    </div>
+    <div class="meta-row">
+      <div class="meta-chip">Location<b>📍 ${b.city}</b></div>
+      <div class="meta-chip">When<b>${b.when}</b></div>
+      <div class="meta-chip">Property<b>${b.beds}</b></div>
+    </div>
+    <div class="match-note">🔍 <b>${matches.length} cleaner${matches.length!==1?'s':''} found in ${b.city}</b>, sorted by how close they are to the customer — so you assign the right worker in the right location.</div>
+    <div class="match-head"><span class="pin">📍</span> Suggested cleaners in ${b.city}</div>`;
+
+  html += matches.map(w=>workerRow(w,true,b)).join('');
+  if(others.length){
+    html += `<div class="match-head" style="margin-top:18px;color:var(--muted)">Other areas (not recommended)</div>`;
+    html += others.map(w=>workerRow(w,false,b)).join('');
+  }
+  d.innerHTML=html;
+}
+function workerRow(w,isMatch,b){
+  const full=Math.round(w.rating);
+  return `<div class="worker ${isMatch?'match':'faded'}">
+    <div class="wav" style="background:${color(w.name)}">${initials(w.name)}</div>
+    <div class="wi">
+      <b>${w.name}</b>
+      <div class="wsub"><span class="stars">${'★'.repeat(full)}</span> ${w.rating} · ${w.jobs} cleans · ${w.type}</div>
+      <div class="wsub">📍 ${w.city} ${isMatch?`· <span class="dist">${w.dist} km away</span>`:''}</div>
+    </div>
+    <button class="assign" onclick='assign("${b.id}","${w.name.replace(/"/g,'')}",this)'>Assign</button>
+  </div>`;
+}
+function assign(bid,wname,btn){
+  const b=BOOKINGS.find(x=>x.id===bid); if(b) b.status='assigned';
+  btn.textContent='✓ Assigned'; btn.classList.add('done'); btn.disabled=true;
+  document.querySelectorAll('#detail .assign').forEach(x=>{ if(x!==btn){x.disabled=true;x.style.opacity=.4;} });
+  toast(`${wname} assigned to ${bid} ✓`);
+  renderList();
+}
+function toast(msg){
+  const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t);
+  setTimeout(()=>{t.style.transition='.4s';t.style.opacity='0';t.style.top='8px';},1800);
+  setTimeout(()=>t.remove(),2300);
+}
+renderList();
+// preselect first booking to showcase matching
+selected=BOOKINGS[0]; renderList(); renderDetail();
+</script>
+</body>
+</html>
