@@ -459,12 +459,13 @@
       <p>Log in to manage your bookings, addresses and rewards.</p>
     </div>
     <div class="modal-body">
-      <div class="fld sm"><label class="f">Email address</label><input type="email" placeholder="you@email.com" /></div>
+      <div class="fld sm"><label class="f">Email address</label><input id="loginEmail" type="email" placeholder="you@email.com" /></div>
       <div class="fld sm"><label class="f">Password</label><input type="password" placeholder="••••••••" /></div>
       <div style="text-align:right;margin-top:-6px"><a class="switch" style="margin:0" href="#" onclick="return false">Forgot password?</a></div>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-primary" onclick="fakeAuth('Logged in! Redirecting to your dashboard…')">Log in</button>
+      <button class="btn btn-primary" onclick="doLogin()">Log in</button>
+      <p class="pin-note" style="text-align:center">Same login for everyone — the system sends you to the right dashboard automatically.<br/>Demo tip: log in with an email containing "admin" to see the admin redirect.</p>
       <div class="switch">New to SparkleHub? <a data-swap="signup">Create an account</a></div>
     </div>
   </div>
@@ -807,6 +808,16 @@ document.querySelectorAll('[data-swap]').forEach(a=>a.addEventListener('click',(
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeAll(); });
 
 function fakeAuth(msg){ closeAll(); toast(msg); }
+function doLogin(){
+  // Demo of the unified login: one form, backend decides the role and redirects.
+  const email=(document.getElementById('loginEmail').value||'').toLowerCase();
+  if(email.includes('admin')){
+    closeAll(); toast('Welcome back, admin — taking you to your dashboard…');
+    setTimeout(()=>{ window.location.href='admin.html'; }, 1000);
+  } else {
+    fakeAuth('Logged in! Taking you to your customer dashboard…');
+  }
+}
 function pickYN(el){ el.parentNode.querySelectorAll('.chip').forEach(c=>c.classList.remove('sel')); el.classList.add('sel'); }
 function submitWorker(){
   const form=document.getElementById('workerForm');
